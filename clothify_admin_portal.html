@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clothify - Inventory Admin Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #8B5CF6;
+            --secondary-color: #EC4899;
+            --success-color: #10B981;
+            --error-color: #EF4444;
+            --bg-color: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-bar::before {
+            content: "🔍";
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls select {
+            padding: 10px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .inventory-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .inventory-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .inventory-table tr:hover {
+            background: #F3F4F6;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .qr-code-img {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .qr-code-img:hover {
+            transform: scale(1.2);
+        }
+
+        .btn-qr-bulk {
+            padding: 6px 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-qr-bulk:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-download-qr {
+            background: white;
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+
+        .btn-download-qr:hover {
+            transform: scale(1.05);
+        }
+
+        .scanner-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        #reader {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        .scanner-status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-status.ready {
+            background: #EFF6FF;
+            color: #1E40AF;
+        }
+
+        .scanner-status.success {
+            background: #D1FAE5;
+            color: #065F46;
+            animation: pulse-success 0.5s;
+        }
+
+        .scanner-status.error {
+            background: #FEE2E2;
+            color: #991B1B;
+            animation: shake 0.5s;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-around;
+            padding: 8px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-color);
+        }
+
+        .nav-btn.active {
+            color: var(--primary-color);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .nav-btn .icon {
+            font-size: 20px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            margin-bottom: 24px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            background: var(--bg-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        /* QR Preview Canvas (hidden) */
+        #qr-canvas {
+            display: none;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        /* ** NEW ** QR Viewer Modal Styles */
+        .qr-viewer-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 4000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        .qr-viewer-content {
+            position: relative;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            animation: slideUp 0.3s;
+        }
+        .qr-viewer-content img {
+            max-width: 80vw;
+            max-height: 70vh;
+            width: 300px;
+            height: 300px;
+            display: block;
+            margin-bottom: 20px;
+        }
+        .qr-viewer-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: #aaa;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .qr-viewer-close:hover {
+            color: #333;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-success {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-10px);
+            }
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .inventory-table {
+                font-size: 14px;
+            }
+            
+            .inventory-table th,
+            .inventory-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎽 Clothify Inventory System</h1>
+            <p>Smart inventory management with QR code tracking</p>
+        </div>
+
+        <section id="inventory-section" class="section active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: var(--primary-color);">📦 Inventory Overview</h2>
+                
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Search by design or SKU...">
+                </div>
+                
+                <div class="controls">
+                    <select id="sort-select">
+                        <option value="">Sort by...</option>
+                        <option value="design">Design</option>
+                        <option value="stock">Stock Level</option>
+                        <option value="sku">SKU</option>
+                        <option value="sold">Units Sold</option>
+                    </select>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Design</th>
+                                <th>Size</th>
+                                <th>Color</th>
+                                <th>Stock</th>
+                                <th>Sold</th>
+                                <th>QR Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-tbody">
+                            </tbody>
+                    </table>
+                </div>
+                
+                <div id="inventory-empty" class="empty-state" style="display: none;">
+                    <div class="icon">📦</div>
+                    <h3>No inventory items yet</h3>
+                    <p>Add your first product to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="add-section" class="section">
+            <div class="card">
+                <h2 style="margin-bottom: 20px; color: var(--primary-color);">➕ Add/Restock Product</h2>
+                
+                <div id="add-success-message" class="success-message">
+                    </div>
+                
+                <form id="add-product-form">
+                    <div class="form-group">
+                        <label for="design">Design/Style</label>
+                        <input type="text" id="design" required placeholder="e.g., T-Shirt, Jeans, Dress">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="size">Size</label>
+                        <select id="size" required>
+                            <option value="">Select Size</option>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="color">Color</label>
+                        <input type="text" id="color" required placeholder="e.g., Blue, Red, Black">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="stock">Initial Stock</label>
+                        <input type="number" id="stock" required min="1" placeholder="Enter quantity">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="price">Price ($)</label>
+                        <input type="number" id="price" required min="0.01" step="0.01" placeholder="29.99">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="scan-section" class="section">
+            <div class="scanner-container">
+                <h2 style="margin-bottom: 20px; color: var(--primary-color);">📷 QR Code Scanner</h2>
+                
+                <div id="scanner-status" class="scanner-status ready">
+                    Ready to scan...
+                </div>
+                
+                <div id="reader"></div>
+                
+                <button id="stop-scanner" class="btn btn-primary" style="display: none;">Stop Scanner</button>
+            </div>
+        </section>
+
+        <section id="analysis-section" class="section">
+            <div class="card" style="text-align: center;">
+                <h2 style="margin-bottom: 20px; color: var(--primary-color);">📊 Business Analysis</h2>
+                <p style="margin-bottom: 24px; color: var(--text-secondary);">
+                    View comprehensive analytics and insights about your inventory
+                </p>
+                <a href="clothify_analytics_dashboard.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
+                    Open Analysis Dashboard
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-container">
+            <button class="nav-btn active" data-section="inventory">
+                <span class="icon">📦</span>
+                <span>Inventory</span>
+            </button>
+            <button class="nav-btn" data-section="add">
+                <span class="icon">➕</span>
+                <span>Add</span>
+            </button>
+            <button class="nav-btn" data-section="scan">
+                <span class="icon">📷</span>
+                <span>Scan</span>
+            </button>
+            <button class="nav-btn" data-section="analysis">
+                <span class="icon">📊</span>
+                <span>Analysis</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 Generate QR Codes</h3>
+                <p id="modal-product-info">Product: </p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="qr-quantity">Number of QR codes to generate:</label>
+                    <input type="number" id="qr-quantity" min="1" value="1" placeholder="Enter quantity">
+                    <small style="color: var(--text-secondary); margin-top: 8px; display: block;">
+                        ℹ️ 20 QR codes per A4 page (5 rows × 4 columns)
+                    </small>
+                    <small id="page-calculation" style="color: var(--primary-color); margin-top: 4px; display: block;">
+                        This will generate 1 page
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeQRModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="generateBulkQR()">Generate PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Generating QR codes...</p>
+            <p id="loading-progress" style="color: var(--text-secondary); margin-top: 8px;"></p>
+        </div>
+    </div>
+    
+    <div id="qr-viewer-modal" class="qr-viewer-overlay" onclick="hideQRModal()">
+        <div class="qr-viewer-content" onclick="event.stopPropagation()">
+            <span class="qr-viewer-close" onclick="hideQRModal()">&times;</span>
+            <img id="qr-viewer-img" src="" alt="Full Size QR Code">
+            <button id="qr-viewer-download-btn" class="btn btn-primary">Download QR</button>
+        </div>
+    </div>
+
+    <canvas id="qr-canvas"></canvas>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="clothify_inventory_engine.js"></script>
+</body>
+</html>
